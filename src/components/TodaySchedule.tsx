@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useSchedule } from '../contexts/ScheduleContext';
 import { useActivity } from '../contexts/ActivityContext';
 import { DAYS_OF_WEEK, Activity } from '../types/Schedule';
+import { formatDateTimeBR } from '../utils/dateUtils';
+import NotificationSettingsPanel from './NotificationSettingsPanel';
 
 interface ActivityFormData {
   title: string;
@@ -17,6 +19,7 @@ const ScheduleActivities = () => {
   const { activities, addActivity, toggleActivityComplete } = useActivity();
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('active');
   const [hideCompleted, setHideCompleted] = useState(true);
   const [formData, setFormData] = useState<ActivityFormData>({
@@ -52,8 +55,7 @@ const ScheduleActivities = () => {
 
   // Função para formatar a data com informação de prazo
   const formatDueDate = (activity: Activity) => {
-    const dueDate = new Date(activity.dueDate);
-    const formattedDate = dueDate.toLocaleString();
+    const formattedDate = formatDateTimeBR(activity.dueDate);
     
     if (activity.completed) {
       return (
@@ -269,7 +271,7 @@ const ScheduleActivities = () => {
               />
               <span>Esconder concluídas</span>
             </label>
-            <div className="relative w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto flex space-x-2">
               <select
                 className="w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pr-8 py-1.5 appearance-none"
                 value={selectedScheduleId || ''}
@@ -287,6 +289,15 @@ const ScheduleActivities = () => {
                   <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
                 </svg>
               </div>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-md flex items-center justify-center"
+                title="Configurações de notificação"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </button>
             </div>
           </div>
         )}
@@ -398,6 +409,12 @@ const ScheduleActivities = () => {
           </div>
         </div>
       )}
+
+      {/* Painel de Configurações de Notificação */}
+      <NotificationSettingsPanel 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </div>
   );
 };

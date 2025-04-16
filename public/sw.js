@@ -43,4 +43,68 @@ self.addEventListener('activate', event => {
       );
     })
   );
+});
+
+// Evento de Push - Quando receber uma notificação push
+self.addEventListener('push', event => {
+  let data = {};
+  if (event.data) {
+    data = event.data.json();
+  }
+
+  const title = data.title || 'Meus Horários';
+  const options = {
+    body: data.body || 'Você recebeu uma notificação!',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-192x192.png',
+    data: {
+      url: data.url || '/'
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+// Receber mensagens da aplicação
+self.addEventListener('message', event => {
+  console.log('Service worker recebeu mensagem:', event.data);
+  
+  if (event.data && event.data.type === 'PUSH_TEST') {
+    // Simular um evento push com os dados recebidos
+    const title = event.data.title || 'Meus Horários';
+    const options = {
+      body: event.data.body || 'Você recebeu uma notificação push!',
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-192x192.png',
+      data: {
+        url: event.data.url || '/',
+        source: 'message'
+      }
+    };
+    
+    self.registration.showNotification(title, options);
+  }
+});
+
+// Evento de clique na notificação
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+
+  const url = event.notification.data.url;
+  event.waitUntil(
+    clients.matchAll({type: 'window'}).then(windowClients => {
+      // Verifica se já existe uma janela aberta e foca nela
+      for (const client of windowClients) {
+        if (client.url === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Se não existir, abre uma nova janela
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
 }); 

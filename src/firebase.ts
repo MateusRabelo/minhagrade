@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from "firebase/analytics";
+import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBa7cJzwcx9I0wLLYdvsdwVnplrK9B9nD0",
@@ -25,3 +26,16 @@ try {
 export const auth = getAuth(app);
 const analytics = getAnalytics(app);
 export const db = getFirestore(app); 
+
+// Inicializa o Firebase Messaging (para notificações push)
+let messaging;
+try {
+  // Verificar se estamos no browser e se é suportado
+  if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    messaging = getMessaging(app);
+  }
+} catch (error) {
+  console.error("Error initializing Firebase Messaging:", error);
+}
+
+export { messaging }; 

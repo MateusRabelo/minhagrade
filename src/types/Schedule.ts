@@ -34,6 +34,16 @@ export const TIME_SLOTS = [
   '15:30'
 ];
 
+export interface NotificationSettings {
+  enabled: boolean;
+  reminderTime: number; // horas antes do prazo
+  showOverdue: boolean;
+  showUpcoming: boolean;
+  upcomingThreshold: number; // horas antes de considerar uma atividade como "em breve"
+  dailyDigest: boolean;
+  dailyDigestTime: string; // formato "HH:MM"
+}
+
 export interface ScheduleContextType {
   schedules: ClassSchedule[];
   addSchedule: (schedule: Omit<ClassSchedule, 'id'>) => Promise<void>;
