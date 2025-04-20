@@ -1,0 +1,16 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore local development files
+.git/
+.gitignore
+.github/
+.vscode/
+.idea/
+.DS_Store
+*.log
+*.md
+!README.md
+
+# Keep browser binaries in the deployment
+!**/node_modules/.cache/ms-playwright/** 

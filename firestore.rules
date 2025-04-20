@@ -2,35 +2,44 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Funções auxiliares
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // Regras para a coleção de horários (schedules)
-    match /schedules/{document} {
-      allow read: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
-      allow update, delete: if isAuthenticated() && isOwner(resource.data.userId);
+    // ATENÇÃO: Regras temporárias para desenvolvimento. 
+    // NÃO use em produção, pois permite acesso a qualquer usuário autenticado.
+    match /{document=**} {
+      allow read, write: if request.auth != null;
     }
     
-    // Regras para a coleção de atividades (activities)
-    match /activities/{document} {
-      allow read: if isAuthenticated() && isOwner(resource.data.userId);
-      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
-      allow update, delete: if isAuthenticated() && isOwner(resource.data.userId);
+    // REGRAS RECOMENDADAS PARA PRODUÇÃO:
+    // Descomente estas regras e remova as regras acima quando for para produção.
+    
+    // Permitir acesso autenticado aos documentos de usuário
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-
-    // Regras para configurações de notificação (caso precise no futuro)
-    match /notificationSettings/{userId} {
-      allow read, write: if isAuthenticated() && isOwner(userId);
+    
+    // Permitir acesso autenticado aos horários (schedules) do próprio usuário
+    match /schedules/{scheduleId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
     }
-
-    // Bloqueia acesso a todas as outras coleções por padrão
+    
+    // Permitir acesso autenticado às atividades (activities) do próprio usuário
+    match /activities/{activityId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Permitir acesso autenticado aos logs de integração do próprio usuário
+    match /integration_logs/{logId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Permitir acesso autenticado aos dados de integração do próprio usuário
+    match /integrations/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Regra padrão: negar acesso a outros documentos
     match /{document=**} {
       allow read, write: if false;
     }

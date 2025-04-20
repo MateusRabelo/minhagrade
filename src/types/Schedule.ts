@@ -10,6 +10,8 @@ export interface ClassSchedule {
   userId: string;
   createdAt?: string;
   updatedAt?: string;
+  importedFromAcademicSystem?: boolean; // Indica se foi importado de um sistema acadêmico
+  isDeletable?: boolean; // Indica se pode ser excluído
 }
 
 export interface Activity {

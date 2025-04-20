@@ -4,11 +4,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSchedule } from '../contexts/ScheduleContext';
 import { ClassSchedule, DAYS_OF_WEEK, TIME_SLOTS } from '../types/Schedule';
 import ScheduleActivities from './TodaySchedule';
+import AcademicIntegration from './AcademicIntegration';
 
 const Dashboard = () => {
   const [openDialog, setOpenDialog] = useState(false);
+  const [showIntegration, setShowIntegration] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Partial<ClassSchedule> | null>(null);
-  const { logout } = useAuth();
+  const { logout, userProfile } = useAuth();
   const { schedules, addSchedule, updateSchedule, deleteSchedule } = useSchedule();
   const navigate = useNavigate();
 
@@ -103,7 +105,7 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto space-y-3 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-3 rounded-lg shadow">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-0">Meus Horários</h1>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:space-x-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:flex sm:space-x-4">
             <button
               onClick={() => {
                 setEditingSchedule(null);
@@ -114,6 +116,18 @@ const Dashboard = () => {
               Adicionar Aula
             </button>
             <button
+              onClick={() => setShowIntegration(!showIntegration)}
+              className={`px-3 py-2 sm:px-4 sm:py-2 ${
+                userProfile?.integrationStatus === 'complete' 
+                  ? 'bg-green-600 hover:bg-green-700 focus:ring-green-500' 
+                  : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+              } text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 text-sm`}
+            >
+              {userProfile?.integrationStatus === 'complete' 
+                ? 'Integração Ativa' 
+                : 'Fazer Integração'}
+            </button>
+            <button
               onClick={handleLogout}
               className="px-3 py-2 sm:px-4 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm"
             >
@@ -121,6 +135,13 @@ const Dashboard = () => {
             </button>
           </div>
         </div>
+
+        {/* Componente de Integração */}
+        {showIntegration && (
+          <div className="bg-white rounded-lg shadow">
+            <AcademicIntegration />
+          </div>
+        )}
 
         {/* Grade de Horários */}
         <div className="bg-white rounded-lg shadow overflow-x-auto">
@@ -185,6 +206,11 @@ const Dashboard = () => {
                                   }
                                 }}
                                 className="text-xs text-red-600 hover:text-red-900"
+                                disabled={classSchedule.importedFromAcademicSystem && !classSchedule.isDeletable}
+                                style={{ 
+                                  opacity: (classSchedule.importedFromAcademicSystem && !classSchedule.isDeletable) ? 0.5 : 1,
+                                  cursor: (classSchedule.importedFromAcademicSystem && !classSchedule.isDeletable) ? 'not-allowed' : 'pointer'
+                                }}
                               >
                                 Excluir
                               </button>

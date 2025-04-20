@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
 import { Activity } from '../types/Schedule';
@@ -70,10 +70,33 @@ export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const deleteActivity = async (id: string) => {
-    if (!currentUser) throw new Error('Must be logged in to delete activities');
-    
-    const activityRef = doc(db, 'activities', id);
-    await deleteDoc(activityRef);
+    try {
+      if (!currentUser) throw new Error('User not authenticated');
+      
+      // Verificar se a atividade existe e se pode ser excluída
+      const activityDoc = await getDoc(doc(db, 'activities', id));
+      
+      if (!activityDoc.exists()) {
+        throw new Error(`Activity ${id} not found`);
+      }
+      
+      const activityData = activityDoc.data();
+      
+      // Se a atividade foi importada do sistema acadêmico e não tem a flag isDeletable,
+      // não permitir a exclusão
+      if (activityData.importedFromAcademicSystem === true && activityData.isDeletable !== true) {
+        throw new Error('Esta atividade foi importada do sistema acadêmico e não pode ser excluída');
+      }
+      
+      // Se chegou aqui, pode excluir normalmente
+      await deleteDoc(doc(db, 'activities', id));
+      
+      // Atualizar estado local
+      setActivities(prevActivities => prevActivities.filter(activity => activity.id !== id));
+    } catch (error: any) {
+      console.error('Error deleting activity:', error);
+      alert(error.message || 'Falha ao excluir a atividade');
+    }
   };
 
   const toggleActivityComplete = async (id: string) => {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
 import { ClassSchedule } from '../types/Schedule';
@@ -69,10 +69,33 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const deleteSchedule = async (id: string) => {
-    if (!currentUser) throw new Error('Must be logged in to delete schedules');
-    
-    const scheduleRef = doc(db, 'schedules', id);
-    await deleteDoc(scheduleRef);
+    try {
+      if (!currentUser) throw new Error('User not authenticated');
+      
+      // Verificar se a disciplina existe e se pode ser excluída
+      const scheduleDoc = await getDoc(doc(db, 'schedules', id));
+      
+      if (!scheduleDoc.exists()) {
+        throw new Error(`Schedule ${id} not found`);
+      }
+      
+      const scheduleData = scheduleDoc.data();
+      
+      // Se a aula foi importada do sistema acadêmico e não tem a flag isDeletable,
+      // não permitir a exclusão
+      if (scheduleData.importedFromAcademicSystem === true && scheduleData.isDeletable !== true) {
+        throw new Error('Esta aula foi importada do sistema acadêmico e não pode ser excluída');
+      }
+      
+      // Se chegou aqui, pode excluir normalmente
+      await deleteDoc(doc(db, 'schedules', id));
+      
+      // Atualizar estado local
+      setSchedules(prevSchedules => prevSchedules.filter(schedule => schedule.id !== id));
+    } catch (error: any) {
+      console.error('Error deleting schedule:', error);
+      alert(error.message || 'Falha ao excluir a aula');
+    }
   };
 
   const value = {

@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+.firebase
+firebase-debug.log
+.vscode
+.git
+.gitignore
+*.md
+tmp
+*.log
+**/.DS_Store 
